@@ -1,0 +1,161 @@
+{
+    "job_titles_query": "(\"MLE\" OR \"Machine Learning\" OR \"AI\" OR \"Artificial Intelligence\" OR \"AI Engineer\" OR \"Deep Learning\" OR \"Applied AI Engineer\" OR \"Forward deployed AI Engineer\" OR \"Applied Machine Learning\" OR \"Applied AI\" \"Applied Machine Learning Engineer\" )",
+    "job_type": "Full-Time",
+    "max_days_posted": 3,
+    "match_threshold": 60,
+    "auto_submit": false,
+    "region_queries": {
+        "west_coast": "(\"San Francisco\" OR \"Bay Area\" OR \"Los Angeles\" OR \"Seattle\" OR \"San Diego\" OR \"Portland\" OR \"Palo Alto\" OR \"Mountain View\" OR \"California\" OR \"Washington\")",
+        "east_coast": "(\"New York\" OR \"Boston\" OR \"Cambridge\" OR \"Washington DC\" OR \"Philadelphia\" OR \"Pittsburgh\" OR \"NY\" OR \"MA\" OR \"DC\")",
+        "south_central": "(\"Austin\" OR \"Dallas\" OR \"Houston\" OR \"Atlanta\" OR \"Miami\" OR \"Raleigh\" OR \"Charlotte\" OR \"Texas\" OR \"Florida\" OR \"Georgia\" OR \"North Carolina\")",
+        "midwest_mountain": "(\"Chicago\" OR \"Denver\" OR \"Boulder\" OR \"Salt Lake City\" OR \"Detroit\" OR \"Minneapolis\" OR \"Illinois\" OR \"Colorado\" OR \"Utah\" OR \"Michigan\")"
+    },
+    "job_sources": [
+        {
+            "name": "greenhouse",
+            "site_query": "site:boards.greenhouse.io"
+        },
+        {
+            "name": "lever",
+            "site_query": "site:jobs.lever.co"
+        },
+        {
+            "name": "ashbyhq",
+            "site_query": "site:jobs.ashbyhq.com"
+        },
+        {
+            "name": "workable",
+            "site_query": "site:apply.workable.com"
+        },
+        {
+            "name": "smartrecruiters",
+            "site_query": "site:jobs.smartrecruiters.com"
+        },
+        {
+            "name": "jobvite",
+            "site_query": "site:jobs.jobvite.com"
+        },
+        {
+            "name": "icims",
+            "site_query": "site:icims.com"
+        },
+        {
+            "name": "bamboohr",
+            "site_query": "site:bamboohr.com/jobs"
+        },
+        {
+            "name": "breezy",
+            "site_query": "site:breezy.hr"
+        },
+        {
+            "name": "recruitee",
+            "site_query": "site:recruitee.com"
+        },
+        {
+            "name": "pinpoint",
+            "site_query": "site:pinpointhq.com"
+        },
+        {
+            "name": "freshteam",
+            "site_query": "site:freshteam.com"
+        },
+        {
+            "name": "careers_page",
+            "site_query": "site:careers-page.com"
+        },
+        {
+            "name": "Google",
+            "site_query": "site:careers.google.com"
+        },
+        {
+            "name": "Amazon",
+            "site_query": "site:amazon.jobs"
+        },
+        {
+            "name": "Meta",
+            "site_query": "site:metacareers.com"
+        },
+        {
+            "name": "Netflix",
+            "site_query": "site:jobs.netflix.com"
+        },
+        {
+            "name": "Microsoft",
+            "site_query": "site:careers.microsoft.com"
+        },
+        {
+            "name": "Apple",
+            "site_query": "site:jobs.apple.com"
+        },
+        {
+            "name": "NVIDIA",
+            "site_query": "site:nvidia.wd5.myworkdayjobs.com"
+        },
+        {
+            "name": "Stripe",
+            "site_query": "site:stripe.com/jobs"
+        },
+        {
+            "name": "Uber",
+            "site_query": "site:uber.wd5.myworkdayjobs.com"
+        },
+        {
+            "name": "Airbnb",
+            "site_query": "site:careers.airbnb.com"
+        },
+        {
+            "name": "TikTok",
+            "site_query": "site:careers.tiktok.com"
+        },
+        {
+            "name": "Salesforce",
+            "site_query": "site:salesforce.wd1.myworkdayjobs.com"
+        },
+        {
+            "name": "Adobe",
+            "site_query": "site:careers.adobe.com"
+        },
+        {
+            "name": "Palantir",
+            "site_query": "site:palantir.com/careers"
+        },
+        {
+            "name": "Intel",
+            "site_query": "site:jobs.intel.com"
+        },
+        {
+            "name": "AMD",
+            "site_query": "site:careers.amd.com"
+        },
+        {
+            "name": "IBM",
+            "site_query": "site:careers.ibm.com"
+        },
+        {
+            "name": "DoorDash",
+            "site_query": "site:careersatdoordash.com"
+        },
+        {
+            "name": "Pinterest",
+            "site_query": "site:pinterestcareers.com"
+        },
+        {
+            "name": "PayPal",
+            "site_query": "site:paypal.wd5.myworkdayjobs.com"
+        },
+        {
+            "name": "Roku",
+            "site_query": "site:weareroku.com/jobs"
+        },
+        {
+            "name": "Snap",
+            "site_query": "site:careers.snap.com"
+        },
+        {
+            "name": "Qualcomm",
+            "site_query": "site:qualcomm.com/careers"
+        }
+    ],
+    "max_results_per_source": 10,
+    "search_delay_seconds": 5
+}

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Application Dashboard</title>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+    <meta name="description" content="A comprehensive dashboard to review and manage scraped and evaluated job postings.">
+</head>
+<body>
+    <!-- Abstract Background Elements -->
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+    <div class="bg-shape shape-3"></div>
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar glass-panel">
+            <div class="logo">
+                <i class="ph-fill ph-target"></i>
+                <h2>JobHunt AI</h2>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" data-target="dashboard">
+                    <i class="ph ph-squares-four"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-target="jobs-found">
+                    <i class="ph ph-briefcase"></i>
+                    <span>Jobs Found</span>
+                </a>
+                <a href="#" class="nav-item" data-target="jobs-evaluated">
+                    <i class="ph ph-chart-bar"></i>
+                    <span>Evaluated Jobs</span>
+                </a>
+                <a href="#" class="nav-item" data-target="settings">
+                    <i class="ph ph-gear"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="search-bar glass-panel input-group">
+                    <i class="ph ph-magnifying-glass"></i>
+                    <input type="text" id="job-search" placeholder="Search jobs by title, company, or keyword...">
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-icon glass-panel"><i class="ph ph-bell"></i></button>
+                    <div class="user-profile glass-panel">
+                        <img src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff" alt="User Avatar">
+                        <span>User</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-body" id="content-body">
+                <!-- Dynamic Content Will Be Injected Here -->
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Loading your job data...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Custom JS -->
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
