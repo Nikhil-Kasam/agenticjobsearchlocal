@@ -53,7 +53,7 @@ def extract_company(url: str, title: str = "") -> str:
             return parts[-1].strip() if len(parts) > 1 else parts[0]
 
         return domain
-    except:
+    except Exception:
         return "Unknown"
 
 
@@ -204,7 +204,7 @@ def _save_json(data: list[dict], filepath: str):
 async def main():
     print("╔══════════════════════════════════════════════════╗")
     print("║  🤖 AI Job Application Automator                ║")
-    print("║  ddgs Search · Qwen 2.5 Coder 32B · CUDA       ║")
+    print("║  ddgs Search · Started......   ║")
     print("╚══════════════════════════════════════════════════╝\n")
 
     # ─── Load Config ───

@@ -7,20 +7,25 @@ from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from langchain_openai import OpenAIEmbeddings
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 DB_DIR = "./chroma_db"
-# Point to our local vLLM server which serves the Qwen3-Embedding model
-EMBEDDING_MODEL = "Qwen/Qwen3-Embedding-8B"
-VLLM_API_BASE = "http://localhost:8000/v1"
+# Point to our local Ollama server which serves the embedder
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "nomic-embed-text:latest")
+VLLM_API_BASE = os.getenv("VLLM_URL", "http://host.docker.internal:11434/v1")
 
 class VectorDBClient:
     def __init__(self):
-        print(f"  [DB] Connecting to vLLM server at: {VLLM_API_BASE}")
+        print(f"  [DB] Connecting to LLM server at: {VLLM_API_BASE}")
         
-        # We use the official OpenAIEmbeddings wrapper but point it to our local vllm server
+        # We use the official OpenAIEmbeddings wrapper but point it to our local server
         self.embeddings = OpenAIEmbeddings(
             model=EMBEDDING_MODEL,
             openai_api_base=VLLM_API_BASE,
-            openai_api_key="EMPTY" # vLLM doesn't require an actual API key
+            openai_api_key="EMPTY", # Ollama/vLLM doesn't require an actual API key
+            check_embedding_ctx_length=False # skip token arrays, Ollama needs string
         )
         self.db = Chroma(persist_directory=DB_DIR, embedding_function=self.embeddings)
     
@@ -29,7 +34,8 @@ class VectorDBClient:
         try:
             results = self.db.get(where={"source": pdf_path})
             return len(results.get("ids", [])) > 0
-        except:
+        except Exception as e:
+            print(f"  [DB] Warning: could not check ingestion status: {e}")
             return False
 
     def ingest_pdf(self, pdf_path: str):

@@ -3,81 +3,698 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Job Application Dashboard</title>
-    
-    <!-- Google Fonts: Inter -->
+    <title>JobHunt AI — Autonomous Application Dashboard</title>
+    <meta name="description" content="AI-powered job application automation dashboard with human-in-the-loop approval workflow.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Phosphor Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    
-    <!-- Custom CSS -->
     <link rel="stylesheet" href="/static/css/style.css">
-    <meta name="description" content="A comprehensive dashboard to review and manage scraped and evaluated job postings.">
+    <style>
+        :root {
+            --bg: #0a0b0f;
+            --surface: #12141a;
+            --surface2: #1a1d27;
+            --border: rgba(255,255,255,0.07);
+            --accent: #7c6ff7;
+            --accent2: #5eead4;
+            --accent3: #f472b6;
+            --text: #e2e8f0;
+            --text-muted: #64748b;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --pending: #f472b6;
+            --radius: 12px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        /* ── Background ── */
+        .bg-orb {
+            position: fixed; border-radius: 50%;
+            filter: blur(80px); opacity: 0.18; pointer-events: none; z-index: 0;
+        }
+        .orb1 { width:500px;height:500px;background:var(--accent);top:-100px;left:-100px; }
+        .orb2 { width:400px;height:400px;background:var(--accent2);bottom:-80px;right:-80px; }
+        .orb3 { width:300px;height:300px;background:var(--accent3);top:40%;left:40%; }
+        /* ── Layout ── */
+        .app { display:flex; min-height:100vh; position:relative; z-index:1; }
+        /* ── Sidebar ── */
+        .sidebar {
+            width: 240px; min-height: 100vh; background: rgba(18,20,26,0.85);
+            border-right: 1px solid var(--border); backdrop-filter: blur(20px);
+            display: flex; flex-direction: column; padding: 24px 16px;
+            position: fixed; top:0; left:0; bottom:0;
+        }
+        .logo { display:flex;align-items:center;gap:10px;padding:0 8px 28px; }
+        .logo i { font-size:28px;color:var(--accent); }
+        .logo h2 { font-size:18px;font-weight:700;letter-spacing:-0.3px; }
+        .logo span { font-size:11px;color:var(--accent2);font-weight:600;letter-spacing:1px; }
+        .nav-section { font-size:10px;color:var(--text-muted);font-weight:600;
+            letter-spacing:1.2px;padding:16px 8px 8px;text-transform:uppercase; }
+        .nav-item {
+            display:flex;align-items:center;gap:10px;padding:10px 12px;
+            border-radius:8px;color:var(--text-muted);text-decoration:none;
+            font-size:13.5px;font-weight:500;transition:all 0.2s;cursor:pointer;
+            margin-bottom:2px;
+        }
+        .nav-item:hover, .nav-item.active {
+            background:rgba(124,111,247,0.15);color:var(--text); }
+        .nav-item.active { color:var(--accent); border-left:3px solid var(--accent); }
+        .nav-item i { font-size:18px; }
+        .badge {
+            margin-left:auto;background:var(--pending);color:#fff;
+            font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px; }
+        .badge.green { background:var(--success); }
+        .sidebar-bottom { margin-top:auto;padding-top:16px;border-top:1px solid var(--border); }
+        /* ── Main ── */
+        .main { margin-left:240px; flex:1; display:flex; flex-direction:column; }
+        /* ── Topbar ── */
+        .topbar {
+            display:flex;align-items:center;gap:16px;padding:16px 28px;
+            border-bottom:1px solid var(--border);
+            background:rgba(10,11,15,0.7);backdrop-filter:blur(20px);
+            position:sticky;top:0;z-index:10;
+        }
+        .topbar h1 { font-size:18px;font-weight:600;flex:1; }
+        .ws-status { display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted); }
+        .ws-dot { width:8px;height:8px;border-radius:50%;background:var(--text-muted); }
+        .ws-dot.connected { background:var(--success);box-shadow:0 0 8px var(--success); }
+        .btn {
+            display:inline-flex;align-items:center;gap:7px;padding:8px 16px;
+            border-radius:8px;border:none;cursor:pointer;font-size:13px;
+            font-weight:600;font-family:'Inter',sans-serif;transition:all 0.2s;
+        }
+        .btn-primary { background:linear-gradient(135deg,var(--accent),#6357e8);color:#fff; }
+        .btn-primary:hover { transform:translateY(-1px);box-shadow:0 8px 20px rgba(124,111,247,0.35); }
+        .btn-success { background:linear-gradient(135deg,var(--success),#16a34a);color:#fff; }
+        .btn-success:hover { transform:translateY(-1px);box-shadow:0 8px 20px rgba(34,197,94,0.3); }
+        .btn-danger { background:rgba(239,68,68,0.15);color:var(--danger);border:1px solid rgba(239,68,68,0.3); }
+        .btn-danger:hover { background:rgba(239,68,68,0.25); }
+        .btn-ghost { background:rgba(255,255,255,0.06);color:var(--text); }
+        .btn-ghost:hover { background:rgba(255,255,255,0.1); }
+        .btn:disabled { opacity:0.4;cursor:not-allowed;transform:none!important; }
+        /* ── Content ── */
+        .content { padding:28px; flex:1; }
+        .section { display:none; }
+        .section.active { display:block; }
+        /* ── Stats cards ── */
+        .stats-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:28px; }
+        .stat-card {
+            background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+            padding:20px;display:flex;flex-direction:column;gap:8px;
+            transition:transform 0.2s;
+        }
+        .stat-card:hover { transform:translateY(-2px); }
+        .stat-label { font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600; }
+        .stat-value { font-size:28px;font-weight:700;letter-spacing:-1px; }
+        .stat-icon { font-size:20px;margin-bottom:4px; }
+        /* ── Pipeline control ── */
+        .pipeline-card {
+            background:linear-gradient(135deg,rgba(124,111,247,0.12),rgba(94,234,212,0.08));
+            border:1px solid rgba(124,111,247,0.25);border-radius:var(--radius);
+            padding:24px;margin-bottom:28px;display:flex;align-items:center;gap:20px;
+        }
+        .pipeline-info h3 { font-size:16px;font-weight:600;margin-bottom:4px; }
+        .pipeline-info p { font-size:13px;color:var(--text-muted); }
+        .pipeline-actions { margin-left:auto;display:flex;gap:10px;flex-wrap:wrap; }
+        /* ── Job cards ── */
+        .jobs-grid { display:flex;flex-direction:column;gap:14px; }
+        .job-card {
+            background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+            padding:20px;display:flex;flex-direction:column;gap:14px;
+            transition:all 0.25s;
+        }
+        .job-card:hover { border-color:rgba(124,111,247,0.35);transform:translateY(-1px); }
+        .job-card.pending-review { border-left:3px solid var(--pending); background:rgba(244,114,182,0.04); }
+        .job-header { display:flex;align-items:flex-start;gap:14px; }
+        .company-icon {
+            width:40px;height:40px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+            display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;
+            color:#fff;flex-shrink:0;text-transform:uppercase;
+        }
+        .job-meta { flex:1;min-width:0; }
+        .job-title { font-size:15px;font-weight:600;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+        .job-company { font-size:13px;color:var(--text-muted); }
+        .job-tags { display:flex;flex-wrap:wrap;gap:6px;margin-top:6px; }
+        .tag {
+            font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;
+            border:1px solid var(--border); color:var(--text-muted);
+        }
+        .tag.skill { border-color:rgba(94,234,212,0.3);color:var(--accent2);background:rgba(94,234,212,0.08); }
+        .tag.missing { border-color:rgba(239,68,68,0.3);color:var(--danger);background:rgba(239,68,68,0.06); }
+        .tag.source { border-color:rgba(124,111,247,0.3);color:var(--accent);background:rgba(124,111,247,0.08); }
+        /* ── Score ring ── */
+        .score-ring {
+            width:56px;height:56px;border-radius:50%;flex-shrink:0;
+            display:flex;align-items:center;justify-content:center;
+            font-size:16px;font-weight:700;
+            border: 3px solid transparent;
+        }
+        .score-ring.high { border-color:var(--success);color:var(--success); }
+        .score-ring.mid { border-color:var(--warning);color:var(--warning); }
+        .score-ring.low { border-color:var(--danger);color:var(--danger); }
+        /* ── Status badge ── */
+        .status-pill {
+            font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;
+        }
+        .status-pending_review { background:rgba(244,114,182,0.15);color:var(--pending); }
+        .status-submitted { background:rgba(34,197,94,0.15);color:var(--success); }
+        .status-evaluated { background:rgba(124,111,247,0.15);color:var(--accent); }
+        .status-found { background:rgba(100,116,139,0.15);color:var(--text-muted); }
+        .status-skipped { background:rgba(100,116,139,0.15);color:var(--text-muted); }
+        .status-failed { background:rgba(239,68,68,0.15);color:var(--danger); }
+        .status-domain_blocked { background:rgba(239,68,68,0.15);color:var(--danger); }
+        /* ── Cover letter preview ── */
+        .cover-letter-preview {
+            background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+            padding:16px;font-size:13px;line-height:1.7;color:var(--text-muted);
+            max-height:200px;overflow-y:auto;white-space:pre-wrap;
+        }
+        .cover-label { font-size:11px;font-weight:600;text-transform:uppercase;
+            letter-spacing:0.8px;color:var(--text-muted);margin-bottom:8px; }
+        /* ── Approve / Skip buttons in card ── */
+        .job-actions { display:flex;gap:10px;flex-wrap:wrap;align-items:center; }
+        .job-url { font-size:12px;color:var(--text-muted);text-decoration:none;
+            display:flex;align-items:center;gap:4px;margin-left:auto; }
+        .job-url:hover { color:var(--accent); }
+        /* ── Live feed ── */
+        .live-feed {
+            background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+            padding:0;overflow:hidden;max-height:260px;overflow-y:auto;
+        }
+        .live-feed-header {
+            position:sticky;top:0;background:var(--surface);
+            padding:14px 18px;border-bottom:1px solid var(--border);
+            font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;
+        }
+        .live-item {
+            padding:10px 18px;border-bottom:1px solid var(--border);
+            font-size:12px;color:var(--text-muted);display:flex;gap:10px;align-items:center;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn { from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none} }
+        .live-dot { width:6px;height:6px;border-radius:50%;flex-shrink:0; }
+        /* ── Filters ── */
+        .filters { display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;align-items:center; }
+        .filter-btn {
+            padding:6px 14px;border-radius:99px;border:1px solid var(--border);
+            background:transparent;color:var(--text-muted);font-size:12px;font-weight:500;
+            cursor:pointer;transition:all 0.2s;font-family:'Inter',sans-serif;
+        }
+        .filter-btn:hover,.filter-btn.active {
+            border-color:var(--accent);color:var(--accent);background:rgba(124,111,247,0.1); }
+        .search-input {
+            flex:1;max-width:320px;padding:8px 14px;border-radius:8px;
+            border:1px solid var(--border);background:var(--surface);
+            color:var(--text);font-size:13px;font-family:'Inter',sans-serif;outline:none;
+        }
+        .search-input:focus { border-color:var(--accent); }
+        /* ── Empty / Loading ── */
+        .empty-state { text-align:center;padding:60px 20px;color:var(--text-muted); }
+        .empty-state i { font-size:48px;margin-bottom:16px;display:block;opacity:0.5; }
+        .empty-state h3 { font-size:16px;margin-bottom:8px;color:var(--text); }
+        .spinner-wrap { text-align:center;padding:40px; }
+        .spinner {
+            width:36px;height:36px;border:3px solid var(--border);
+            border-top-color:var(--accent);border-radius:50%;
+            animation:spin 0.8s linear infinite;display:inline-block;
+        }
+        @keyframes spin { to{transform:rotate(360deg)} }
+        /* ── Toast ── */
+        #toast-container { position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px; }
+        .toast {
+            background:var(--surface2);border:1px solid var(--border);color:var(--text);
+            padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;
+            backdrop-filter:blur(20px);box-shadow:0 8px 32px rgba(0,0,0,0.3);
+            display:flex;align-items:center;gap:10px;min-width:280px;
+            animation:toastIn 0.3s ease;
+        }
+        @keyframes toastIn { from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none} }
+        .toast.success { border-color:rgba(34,197,94,0.4); }
+        .toast.error { border-color:rgba(239,68,68,0.4); }
+    </style>
 </head>
 <body>
-    <!-- Abstract Background Elements -->
-    <div class="bg-shape shape-1"></div>
-    <div class="bg-shape shape-2"></div>
-    <div class="bg-shape shape-3"></div>
+<div class="bg-orb orb1"></div>
+<div class="bg-orb orb2"></div>
+<div class="bg-orb orb3"></div>
+<div id="toast-container"></div>
 
-    <div class="app-container">
-        <!-- Sidebar Navigation -->
-        <aside class="sidebar glass-panel">
-            <div class="logo">
-                <i class="ph-fill ph-target"></i>
+<div class="app">
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+        <div class="logo">
+            <i class="ph-fill ph-target"></i>
+            <div>
                 <h2>JobHunt AI</h2>
+                <span>AUTONOMOUS</span>
             </div>
-            
-            <nav class="nav-menu">
-                <a href="#" class="nav-item active" data-target="dashboard">
-                    <i class="ph ph-squares-four"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="#" class="nav-item" data-target="jobs-found">
-                    <i class="ph ph-briefcase"></i>
-                    <span>Jobs Found</span>
-                </a>
-                <a href="#" class="nav-item" data-target="jobs-evaluated">
-                    <i class="ph ph-chart-bar"></i>
-                    <span>Evaluated Jobs</span>
-                </a>
-                <a href="#" class="nav-item" data-target="settings">
-                    <i class="ph ph-gear"></i>
-                    <span>Settings</span>
-                </a>
-            </nav>
-        </aside>
+        </div>
 
-        <!-- Main Content Area -->
-        <main class="main-content">
-            <header class="top-bar">
-                <div class="search-bar glass-panel input-group">
-                    <i class="ph ph-magnifying-glass"></i>
-                    <input type="text" id="job-search" placeholder="Search jobs by title, company, or keyword...">
-                </div>
-                <div class="header-actions">
-                    <button class="btn btn-icon glass-panel"><i class="ph ph-bell"></i></button>
-                    <div class="user-profile glass-panel">
-                        <img src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff" alt="User Avatar">
-                        <span>User</span>
+        <div class="nav-section">Main</div>
+        <nav>
+            <a class="nav-item active" data-section="dashboard">
+                <i class="ph ph-squares-four"></i><span>Dashboard</span>
+            </a>
+            <a class="nav-item" data-section="pending">
+                <i class="ph ph-clock-countdown"></i><span>Pending Review</span>
+                <span class="badge" id="pending-badge">0</span>
+            </a>
+        </nav>
+
+        <div class="nav-section">Jobs</div>
+        <nav>
+            <a class="nav-item" data-section="evaluated">
+                <i class="ph ph-chart-bar"></i><span>Evaluated</span>
+            </a>
+            <a class="nav-item" data-section="found">
+                <i class="ph ph-briefcase"></i><span>All Found</span>
+            </a>
+        </nav>
+
+        <div class="nav-section">System</div>
+        <nav>
+            <a class="nav-item" href="http://localhost:5555" target="_blank">
+                <i class="ph ph-flower"></i><span>Flower (Celery)</span>
+                <i class="ph ph-arrow-square-out" style="font-size:12px;margin-left:auto"></i>
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="ws-status">
+                <div class="ws-dot" id="ws-dot"></div>
+                <span id="ws-label">Connecting…</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ── Main ── -->
+    <main class="main">
+        <div class="topbar">
+            <h1 id="page-title">Dashboard</h1>
+            <button class="btn btn-primary" id="start-pipeline-btn" onclick="startPipeline()">
+                <i class="ph ph-play-circle"></i> Start Search Pipeline
+            </button>
+        </div>
+
+        <div class="content">
+
+            <!-- ═══════════ DASHBOARD ═══════════ -->
+            <div class="section active" id="section-dashboard">
+                <div class="stats-grid" id="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">🔍</div>
+                        <div class="stat-label">Jobs Found</div>
+                        <div class="stat-value" id="stat-found">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🧠</div>
+                        <div class="stat-label">Evaluated</div>
+                        <div class="stat-value" id="stat-evaluated">—</div>
+                    </div>
+                    <div class="stat-card" style="border-color:rgba(244,114,182,0.3)">
+                        <div class="stat-icon">⏳</div>
+                        <div class="stat-label">Pending Review</div>
+                        <div class="stat-value" id="stat-pending" style="color:var(--pending)">—</div>
+                    </div>
+                    <div class="stat-card" style="border-color:rgba(34,197,94,0.3)">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-label">Submitted</div>
+                        <div class="stat-value" id="stat-submitted" style="color:var(--success)">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-label">Avg Score</div>
+                        <div class="stat-value" id="stat-avg">—</div>
                     </div>
                 </div>
-            </header>
 
-            <div class="content-body" id="content-body">
-                <!-- Dynamic Content Will Be Injected Here -->
-                <div class="loading-state">
-                    <div class="spinner"></div>
-                    <p>Loading your job data...</p>
+                <div class="pipeline-card">
+                    <div>
+                        <i class="ph ph-robot" style="font-size:36px;color:var(--accent)"></i>
+                    </div>
+                    <div class="pipeline-info">
+                        <h3>Autonomous Job Application Pipeline</h3>
+                        <p>Qwen3.5-27B NVFP4 · RAG Matching · LangGraph Checkpoints · HITL Approvals</p>
+                    </div>
+                    <div class="pipeline-actions">
+                        <button class="btn btn-primary" onclick="startPipeline()">
+                            <i class="ph ph-play"></i> Start Pipeline
+                        </button>
+                        <button class="btn btn-ghost" onclick="navigate('pending')">
+                            <i class="ph ph-clock-countdown"></i> Review Pending
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Live Feed -->
+                <div style="margin-bottom:24px">
+                    <div style="font-size:13px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+                        <i class="ph ph-activity"></i> Live Feed
+                    </div>
+                    <div class="live-feed" id="live-feed">
+                        <div class="live-feed-header">
+                            <i class="ph ph-broadcast"></i> Real-time events
+                        </div>
+                        <div class="live-item" style="color:var(--text-muted)">
+                            <div class="live-dot" style="background:var(--text-muted)"></div>
+                            Waiting for pipeline activity…
+                        </div>
+                    </div>
                 </div>
             </div>
-        </main>
-    </div>
 
-    <!-- Custom JS -->
-    <script src="/static/js/main.js"></script>
+            <!-- ═══════════ PENDING REVIEW ═══════════ -->
+            <div class="section" id="section-pending">
+                <div class="filters">
+                    <span style="font-size:13px;color:var(--text-muted)">Jobs requiring your approval:</span>
+                </div>
+                <div class="jobs-grid" id="pending-jobs">
+                    <div class="spinner-wrap"><div class="spinner"></div></div>
+                </div>
+            </div>
+
+            <!-- ═══════════ EVALUATED ═══════════ -->
+            <div class="section" id="section-evaluated">
+                <div class="filters">
+                    <input class="search-input" type="text" id="eval-search" placeholder="Search by title, company…" oninput="filterEvaluated()">
+                    <button class="filter-btn active" onclick="setFilter('all')">All</button>
+                    <button class="filter-btn" onclick="setFilter('apply')">Apply</button>
+                    <button class="filter-btn" onclick="setFilter('borderline')">Borderline</button>
+                    <button class="filter-btn" onclick="setFilter('skip')">Skip</button>
+                </div>
+                <div class="jobs-grid" id="evaluated-jobs">
+                    <div class="spinner-wrap"><div class="spinner"></div></div>
+                </div>
+            </div>
+
+            <!-- ═══════════ ALL FOUND ═══════════ -->
+            <div class="section" id="section-found">
+                <div class="filters">
+                    <input class="search-input" type="text" id="found-search" placeholder="Search all found jobs…" oninput="filterFound()">
+                </div>
+                <div class="jobs-grid" id="found-jobs">
+                    <div class="spinner-wrap"><div class="spinner"></div></div>
+                </div>
+            </div>
+
+        </div><!-- /content -->
+    </main>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────────
+let ws = null;
+let currentSection = 'dashboard';
+let evalFilter = 'all';
+let allEvaluated = [];
+let allFound = [];
+
+// ── Navigation ─────────────────────────────────────────────────────────────────
+function navigate(section) {
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+    document.querySelector(`.nav-item[data-section="${section}"]`)?.classList.add('active');
+    document.getElementById(`section-${section}`)?.classList.add('active');
+    currentSection = section;
+    const titles = {
+        dashboard: 'Dashboard', pending: 'Pending Review',
+        evaluated: 'Evaluated Jobs', found: 'All Found Jobs'
+    };
+    document.getElementById('page-title').textContent = titles[section] || section;
+    if (section === 'pending') loadPending();
+    if (section === 'evaluated') loadEvaluated();
+    if (section === 'found') loadFound();
+}
+document.querySelectorAll('.nav-item[data-section]').forEach(el => {
+    el.addEventListener('click', (e) => { e.preventDefault(); navigate(el.dataset.section); });
+});
+
+// ── Score helper ───────────────────────────────────────────────────────────────
+function scoreClass(s) {
+    if (s === null || s === -1 || s === undefined) return '';
+    if (s >= 70) return 'high'; if (s >= 45) return 'mid'; return 'low';
+}
+function scoreColor(s) {
+    if (s >= 70) return 'var(--success)'; if (s >= 45) return 'var(--warning)'; return 'var(--danger)';
+}
+
+// ── Stats ──────────────────────────────────────────────────────────────────────
+async function loadStats() {
+    try {
+        const r = await fetch('/api/stats');
+        const s = await r.json();
+        document.getElementById('stat-found').textContent = (s.found||0)+(s.evaluated||0)+(s.pending||0)+(s.submitted||0)+(s.skipped||0)+(s.failed||0);
+        document.getElementById('stat-evaluated').textContent = s.evaluated||0;
+        document.getElementById('stat-pending').textContent = s.pending||0;
+        document.getElementById('stat-submitted').textContent = s.submitted||0;
+        const avg = s.avg_score ? Math.round(parseFloat(s.avg_score)) : '—';
+        document.getElementById('stat-avg').textContent = avg === '—' ? avg : avg+'%';
+        document.getElementById('pending-badge').textContent = s.pending||0;
+    } catch(e) {}
+}
+
+// ── Pending Review ─────────────────────────────────────────────────────────────
+async function loadPending() {
+    const container = document.getElementById('pending-jobs');
+    container.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+    try {
+        const r = await fetch('/api/jobs/pending');
+        const jobs = await r.json();
+        if (!jobs.length) {
+            container.innerHTML = `<div class="empty-state">
+                <i class="ph ph-check-circle"></i>
+                <h3>No pending jobs</h3>
+                <p>When the pipeline finds qualified jobs, they'll appear here for your approval.</p>
+            </div>`;
+            return;
+        }
+        container.innerHTML = jobs.map(j => pendingCard(j)).join('');
+    } catch(e) {
+        container.innerHTML = `<div class="empty-state"><i class="ph ph-warning"></i><h3>Error loading jobs</h3><p>${e.message}</p></div>`;
+    }
+}
+
+function pendingCard(j) {
+    const score = j.match_score ?? -1;
+    const skills = (j.top_matching_skills||[]).slice(0,5).map(s=>`<span class="tag skill">${s}</span>`).join('');
+    const missing = (j.missing_skills||[]).slice(0,4).map(s=>`<span class="tag missing">-${s}</span>`).join('');
+    const letter = j.cover_letter ? j.cover_letter.substring(0,600)+'…' : 'No cover letter generated.';
+    const subj = j.cover_letter_subject || '';
+    return `
+    <div class="job-card pending-review" id="card-${j.id}">
+        <div class="job-header">
+            <div class="company-icon">${(j.company||'?')[0]}</div>
+            <div class="job-meta">
+                <div class="job-title">${j.title||'Unknown'}</div>
+                <div class="job-company">${j.company||'Unknown'} · <span class="tag source" style="font-size:10px">${j.source||''}</span></div>
+                <div class="job-tags" style="margin-top:8px">${skills}${missing}</div>
+            </div>
+            <div class="score-ring ${scoreClass(score)}" style="border-color:${scoreColor(score)};color:${scoreColor(score)}">${score >= 0 ? score : '?'}</div>
+        </div>
+        ${subj ? `<div style="font-size:12px;color:var(--text-muted)"><b>Subject:</b> ${subj}</div>` : ''}
+        <div>
+            <div class="cover-label">Cover Letter Preview</div>
+            <div class="cover-letter-preview">${letter}</div>
+        </div>
+        <div class="job-actions">
+            <button class="btn btn-success" onclick="approveJob('${j.id}')">
+                <i class="ph ph-check-circle"></i> Approve & Submit
+            </button>
+            <button class="btn btn-danger" onclick="skipJob('${j.id}')">
+                <i class="ph ph-x-circle"></i> Skip
+            </button>
+            <a class="job-url" href="${j.url}" target="_blank">
+                <i class="ph ph-arrow-square-out"></i> View Job
+            </a>
+        </div>
+    </div>`;
+}
+
+async function approveJob(jobId) {
+    const btn = event.target.closest('button');
+    btn.disabled = true; btn.innerHTML = '<i class="ph ph-spinner"></i> Submitting…';
+    try {
+        const r = await fetch(`/api/jobs/${jobId}/approve`, {method:'POST'});
+        const data = await r.json();
+        toast('Application queued for submission! Browser agent starting…', 'success');
+        document.getElementById(`card-${jobId}`)?.remove();
+        loadStats();
+    } catch(e) { toast('Error: '+e.message, 'error'); btn.disabled=false; }
+}
+
+async function skipJob(jobId) {
+    try {
+        await fetch(`/api/jobs/${jobId}/skip`, {method:'POST'});
+        toast('Job skipped.', '');
+        document.getElementById(`card-${jobId}`)?.remove();
+        loadStats();
+    } catch(e) { toast('Error: '+e.message, 'error'); }
+}
+
+// ── Evaluated jobs ─────────────────────────────────────────────────────────────
+async function loadEvaluated() {
+    const container = document.getElementById('evaluated-jobs');
+    container.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+    try {
+        const r = await fetch('/api/jobs/evaluated');
+        allEvaluated = await r.json();
+        renderEvaluated();
+    } catch(e) {
+        container.innerHTML = `<div class="empty-state"><i class="ph ph-warning"></i><h3>Error</h3><p>${e.message}</p></div>`;
+    }
+}
+function setFilter(f) {
+    evalFilter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase()===f||f==='all'&&b.textContent==='All'));
+    renderEvaluated();
+}
+function filterEvaluated() { renderEvaluated(); }
+function renderEvaluated() {
+    const q = document.getElementById('eval-search').value.toLowerCase();
+    let jobs = allEvaluated.filter(j => {
+        const matchFilter = evalFilter === 'all' || j.recommendation === evalFilter;
+        const matchSearch = !q || (j.title||'').toLowerCase().includes(q) || (j.company||'').toLowerCase().includes(q);
+        return matchFilter && matchSearch;
+    });
+    document.getElementById('evaluated-jobs').innerHTML = jobs.length
+        ? jobs.map(j => evalCard(j)).join('')
+        : `<div class="empty-state"><i class="ph ph-chart-bar"></i><h3>No jobs found</h3><p>Try a different filter.</p></div>`;
+}
+function evalCard(j) {
+    const score = j.match_score ?? -1;
+    const skills = (j.top_matching_skills||[]).slice(0,5).map(s=>`<span class="tag skill">${s}</span>`).join('');
+    const missing = (j.missing_skills||[]).slice(0,3).map(s=>`<span class="tag missing">-${s}</span>`).join('');
+    return `
+    <div class="job-card">
+        <div class="job-header">
+            <div class="company-icon">${(j.company||'?')[0]}</div>
+            <div class="job-meta">
+                <div class="job-title">${j.title||'Unknown'}</div>
+                <div class="job-company">${j.company||'Unknown'}</div>
+                <div class="job-tags" style="margin-top:8px">
+                    <span class="status-pill status-${j.status}">${j.status||''}</span>
+                    ${skills}${missing}
+                </div>
+            </div>
+            <div class="score-ring ${scoreClass(score)}">${score >= 0 ? score : '?'}</div>
+        </div>
+        ${j.eval_reasoning ? `<div style="font-size:12px;color:var(--text-muted);line-height:1.6">${j.eval_reasoning.substring(0,200)}…</div>` : ''}
+        <div class="job-actions">
+            <a class="job-url" href="${j.url}" target="_blank"><i class="ph ph-arrow-square-out"></i> View Job</a>
+        </div>
+    </div>`;
+}
+
+// ── All Found ──────────────────────────────────────────────────────────────────
+async function loadFound() {
+    const container = document.getElementById('found-jobs');
+    container.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+    try {
+        const r = await fetch('/api/jobs/found');
+        allFound = await r.json();
+        renderFound();
+    } catch(e) {
+        container.innerHTML = `<div class="empty-state"><i class="ph ph-warning"></i><h3>Error</h3><p>${e.message}</p></div>`;
+    }
+}
+function filterFound() {
+    const q = document.getElementById('found-search').value.toLowerCase();
+    const jobs = allFound.filter(j => !q || (j.title||'').toLowerCase().includes(q) || (j.company||'').toLowerCase().includes(q));
+    document.getElementById('found-jobs').innerHTML = jobs.slice(0,100).map(j => `
+    <div class="job-card">
+        <div class="job-header">
+            <div class="company-icon">${(j.company||'?')[0]}</div>
+            <div class="job-meta">
+                <div class="job-title">${j.title||'Unknown'}</div>
+                <div class="job-company">${j.company||'Unknown'} · <span style="font-size:11px;color:var(--text-muted)">${j.source||''}</span></div>
+            </div>
+            <span class="status-pill status-${j.status}">${j.status||'found'}</span>
+        </div>
+        <a class="job-url" href="${j.url}" target="_blank" style="font-size:12px"><i class="ph ph-arrow-square-out"></i> View</a>
+    </div>`).join('');
+}
+function renderFound() { filterFound(); }
+
+// ── Pipeline ───────────────────────────────────────────────────────────────────
+async function startPipeline() {
+    const btn = document.getElementById('start-pipeline-btn');
+    btn.disabled = true; btn.innerHTML = '<i class="ph ph-spinner"></i> Starting…';
+    try {
+        const r = await fetch('/api/pipeline/start', {method:'POST'});
+        const d = await r.json();
+        if (d.error) { toast('Error: '+d.error, 'error'); }
+        else { toast('Pipeline started! Task ID: '+d.task_id, 'success'); addLiveEvent('Pipeline started', 'var(--accent)'); }
+    } catch(e) { toast('Error: '+e.message, 'error'); }
+    finally { btn.disabled=false; btn.innerHTML='<i class="ph ph-play-circle"></i> Start Search Pipeline'; }
+}
+
+// ── WebSocket ──────────────────────────────────────────────────────────────────
+function connectWS() {
+    const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    ws = new WebSocket(`${protocol}//${location.host}/ws/updates`);
+    ws.onopen = () => {
+        document.getElementById('ws-dot').classList.add('connected');
+        document.getElementById('ws-label').textContent = 'Live';
+    };
+    ws.onmessage = (e) => {
+        try {
+            const msg = JSON.parse(e.data);
+            handleWsMessage(msg);
+        } catch {}
+    };
+    ws.onclose = () => {
+        document.getElementById('ws-dot').classList.remove('connected');
+        document.getElementById('ws-label').textContent = 'Reconnecting…';
+        setTimeout(connectWS, 3000);
+    };
+}
+function handleWsMessage(msg) {
+    if (msg.type === 'new_pending_review') {
+        toast(`⏳ New job to review: ${msg.title} @ ${msg.company} (${msg.match_score}/100)`, '');
+        addLiveEvent(`Pending review: ${msg.title} @ ${msg.company}`, 'var(--pending)');
+        loadStats();
+        if (currentSection === 'pending') loadPending();
+    } else if (msg.type === 'application_submitted') {
+        toast(`✅ Submitted: ${msg.title} @ ${msg.company}`, 'success');
+        addLiveEvent(`Submitted: ${msg.title} @ ${msg.company}`, 'var(--success)');
+        loadStats();
+    } else if (msg.type === 'job_approved') {
+        addLiveEvent(`Approved job ${msg.job_id}`, 'var(--accent2)');
+    } else if (msg.type === 'job_skipped') {
+        addLiveEvent(`Skipped job ${msg.job_id}`, 'var(--text-muted)');
+    }
+}
+function addLiveEvent(text, color) {
+    const feed = document.getElementById('live-feed');
+    const item = document.createElement('div');
+    item.className = 'live-item';
+    item.innerHTML = `<div class="live-dot" style="background:${color}"></div><span>${text}</span><span style="margin-left:auto;font-size:11px">${new Date().toLocaleTimeString()}</span>`;
+    const header = feed.querySelector('.live-feed-header');
+    feed.insertBefore(item, header ? header.nextSibling : feed.firstChild);
+    if (feed.children.length > 20) feed.lastChild?.remove();
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────────
+function toast(msg, type) {
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.innerHTML = `<i class="ph ph-${type==='success'?'check-circle':'info'}"></i>${msg}`;
+    document.getElementById('toast-container').appendChild(el);
+    setTimeout(() => el.remove(), 4500);
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+loadStats();
+connectWS();
+setInterval(loadStats, 15000);  // Refresh stats every 15s
+</script>
 </body>
 </html>

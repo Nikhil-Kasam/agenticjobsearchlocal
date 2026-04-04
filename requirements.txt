@@ -1,20 +1,59 @@
+# ── LangChain / LangGraph ─────────────────────────────────
 langchain-core
-langgraph
-ollama
-browser-use==0.1.20
-playwright
-chromadb
-pypdf2
-pydantic
+langchain-openai
 langchain-chroma
 langchain-community
-langchain-openai
-requests
-ddgs
-beautifulsoup4
-lxml
+langgraph
+langgraph-checkpoint-postgres
+
+# ── LLM / Instructor / Structured Outputs ────────────────
+openai
+instructor
+httpx
+
+# ── Celery + Redis ────────────────────────────────────────
+celery[redis]
+redis
+flower
+
+# ── Database ──────────────────────────────────────────────
+sqlalchemy[asyncio]
+asyncpg
+psycopg2-binary
+
+# ── Environment ──────────────────────────────────────────
+python-dotenv
+
+# ── Vector DB + Embeddings ────────────────────────────────
+chromadb
+
+# ── Browser Automation ────────────────────────────────────
+browser-use==0.1.20
+playwright
+
+# ── Web Framework ─────────────────────────────────────────
 fastapi
 uvicorn
 jinja2
-vllm
-openai
+websockets
+python-multipart
+
+# ── Search ────────────────────────────────────────────────
+ddgs
+
+# ── PDF parsing ───────────────────────────────────────────
+pypdf2
+
+# ── Data ──────────────────────────────────────────────────
+pydantic
+
+# ── Evals ─────────────────────────────────────────────────
+ragas
+datasets
+
+# ── HTML parsing (search result cleanup) ─────────────────
+beautifulsoup4
+lxml
+
+# ── Requests (legacy sync LLM calls) ─────────────────────
+requests

@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-server
+  labels:
+    app: vllm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vllm
+  template:
+    metadata:
+      labels:
+        app: vllm
+    spec:
+      containers:
+      - name: vllm
+        image: vllm/vllm-openai:v0.8.5.post1
+        env:
+        - name: HF_TOKEN
+          value: "Insert your token here"
+        command: ["python3", "-m", "vllm.entrypoints.openai.api_server"]
+        args:
+        - "--model=kaitchup/Qwen3.5-27B-NVFP4"
+        - "--max-model-len=131072"
+        - "--gpu-memory-utilization=0.90"
+        - "--reasoning-parser=qwen3"
+        - "--enable-chunked-prefill"
+        - "--speculative-config={\"method\":\"qwen3_next_mtp\",\"num_speculative_tokens\":2}"
+        - "--port=8000"
+        ports:
+        - containerPort: 8000
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vllm-server-svc
+spec:
+  selector:
+    app: vllm
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000

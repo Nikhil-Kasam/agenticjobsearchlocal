@@ -50,3 +50,11 @@ agent_history.gif
 # Logs
 logs/
 *.log
+
+# Production additions
+.env
+data/
+evals/ragas_results.json
+evals/promptfoo_results.json
+*.pyc
+__pycache__/

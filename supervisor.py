@@ -37,7 +37,7 @@ class Supervisor:
         self.resume_text = resume_text
         self.llm = LocalLLM()
         self.db = VectorDBClient()
-        self.model_name = "qwen2.5-coder:32b"
+        self.model_name = "kaitchup/Qwen3.5-27B-NVFP4"
 
         # Results
         self.all_jobs = []
@@ -159,7 +159,7 @@ class Supervisor:
         - If you see an error page, use "done" with: [{{"error": "page_error"}}]
         """
 
-        llm = ChatOpenAI(model=self.model_name, base_url="http://localhost:11434/v1", api_key="ollama")
+        llm = ChatOpenAI(model=self.model_name, base_url="http://localhost:8000/v1", api_key="EMPTY")
         agent = Agent(task=task_prompt, llm=llm, max_actions_per_step=1, max_failures=3)
 
         # Stagger starts to avoid rate limits

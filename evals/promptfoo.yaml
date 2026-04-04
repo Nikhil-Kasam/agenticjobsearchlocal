@@ -1,0 +1,192 @@
+# promptfoo.yaml — Automated LLM output format testing
+#
+# Tests the job scoring + cover letter prompts for format consistency.
+# Run: npx promptfoo eval
+#
+# Checks:
+#   - Score output is valid JSON matching JobEvaluation schema
+#   - match_score is an integer 0-100
+#   - No [bracket] placeholders in cover letters
+#   - No markdown in cover letters
+
+description: "AI Job Agent — LLM Output Format Tests"
+
+providers:
+  - id: openai:chat:kaitchup/Qwen3.5-27B-NVFP4
+    config:
+      apiBaseUrl: "http://localhost:8000/v1"
+      apiKey: "EMPTY"
+      max_tokens: 600
+
+prompts:
+  - id: scoring_prompt
+    label: "Job Scoring — JSON schema enforcement"
+    raw: |
+      You are a job-resume matching evaluator.
+      Respond ONLY with valid JSON matching this schema:
+      { "match_score": int(0-100), "top_matching_skills": list[str], "missing_skills": list[str], "recommendation": "apply"|"skip"|"borderline", "reasoning": str }
+
+      JOB: {{job_title}} at {{company}}
+      DESCRIPTION: {{job_description}}
+
+      RESUME CONTEXT: {{resume_context}}
+
+  - id: cover_letter_prompt
+    label: "Cover Letter — No placeholders, no markdown"
+    raw: |
+      Write a cover letter for {{candidate_name}} applying to {{job_title}} at {{company}}.
+      Job description: {{job_description}}
+      Resume: {{resume_context}}
+      Rules: under 300 words, no markdown, no [brackets], professional tone.
+
+tests:
+  # ── Scoring format tests ──────────────────────────────────────────────────
+  - description: "Score — ML Engineer job returns valid JSON"
+    prompt: scoring_prompt
+    vars:
+      job_title: "Senior ML Engineer"
+      company: "Databricks"
+      job_description: "PyTorch, LLMs, MLflow, distributed training, Python 3.10+"
+      resume_context: "Experience with PyTorch, TensorFlow, MLflow, AWS SageMaker, LangChain"
+    assert:
+      - type: is-json
+        description: "Output must be valid JSON"
+      - type: javascript
+        value: "JSON.parse(output).match_score >= 0 && JSON.parse(output).match_score <= 100"
+        description: "match_score between 0-100"
+      - type: javascript
+        value: "['apply','skip','borderline'].includes(JSON.parse(output).recommendation)"
+        description: "recommendation is one of three valid values"
+      - type: javascript
+        value: "Array.isArray(JSON.parse(output).top_matching_skills)"
+        description: "top_matching_skills is an array"
+      - type: javascript
+        value: "typeof JSON.parse(output).reasoning === 'string'"
+        description: "reasoning is a string"
+
+  - description: "Score — High-match AI job returns score >= 65"
+    prompt: scoring_prompt
+    vars:
+      job_title: "LLM Engineer"
+      company: "Anthropic"
+      job_description: "Fine-tuning LLMs, RLHF, Hugging Face, Python, deep learning"
+      resume_context: "Fine-Tuning, LLMs, Hugging Face, BERT, GPT, Python, Deep Learning, NLP"
+    assert:
+      - type: is-json
+      - type: javascript
+        value: "JSON.parse(output).match_score >= 60"
+        description: "High-match job should score >= 60"
+      - type: javascript
+        value: "JSON.parse(output).recommendation !== 'skip'"
+        description: "Should not recommend skip for a strong match"
+
+  - description: "Score — Low-match job returns score < 50"
+    prompt: scoring_prompt
+    vars:
+      job_title: "iOS Mobile Developer"
+      company: "Apple"
+      job_description: "Swift, Objective-C, Xcode, UIKit, CoreData, App Store publishing"
+      resume_context: "Python, Machine Learning, PyTorch, SQL, AWS, Docker"
+    assert:
+      - type: is-json
+      - type: javascript
+        value: "JSON.parse(output).match_score < 60"
+        description: "Low-match job should score < 60"
+
+  - description: "Score — Missing skills populated for gap job"
+    prompt: scoring_prompt
+    vars:
+      job_title: "Robotics Engineer"
+      company: "Boston Dynamics"
+      job_description: "ROS2, C++, SLAM, control systems, real-time Linux"
+      resume_context: "Python, Machine Learning, PyTorch, C++, AWS"
+    assert:
+      - type: is-json
+      - type: javascript
+        value: "JSON.parse(output).missing_skills.length > 0"
+        description: "Missing skills should be populated for gap jobs"
+
+  - description: "Score — No conversational text mixed in"
+    prompt: scoring_prompt
+    vars:
+      job_title: "Data Scientist"
+      company: "Snowflake"
+      job_description: "SQL, Python, statistical modeling, Snowflake, dbt"
+      resume_context: "SQL, Python, Apache Spark, Snowflake, Machine Learning, XGBoost"
+    assert:
+      - type: is-json
+        description: "Pure JSON, no conversational prefix like 'Sure! Here is...'"
+
+  # ── Cover letter format tests ─────────────────────────────────────────────
+  - description: "Cover letter — No [bracket] placeholders"
+    prompt: cover_letter_prompt
+    vars:
+      candidate_name: "Nikhil Reddy Kasam"
+      job_title: "ML Engineer"
+      company: "Databricks"
+      job_description: "PyTorch, LLMs, distributed training"
+      resume_context: "ML Engineer at S&P Global, PyTorch, LangChain, AWS SageMaker"
+    assert:
+      - type: not-contains
+        value: "["
+        description: "No opening bracket placeholders"
+      - type: not-contains
+        value: "]"
+        description: "No closing bracket placeholders"
+
+  - description: "Cover letter — No markdown"
+    prompt: cover_letter_prompt
+    vars:
+      candidate_name: "Nikhil Reddy Kasam"
+      job_title: "AI Engineer"
+      company: "OpenAI"
+      job_description: "LLMs, Python, fine-tuning, research"
+      resume_context: "LLMs, Fine-Tuning, Python, Hugging Face, NLP, BERT, GPT"
+    assert:
+      - type: not-contains
+        value: "**"
+        description: "No bold markdown"
+      - type: not-contains
+        value: "##"
+        description: "No header markdown"
+
+  - description: "Cover letter — Uses candidate's actual name"
+    prompt: cover_letter_prompt
+    vars:
+      candidate_name: "Nikhil Reddy Kasam"
+      job_title: "MLE"
+      company: "Anthropic"
+      job_description: "RLHF, LLM alignment, Python"
+      resume_context: "LLMs, Fine-Tuning, Python, Deep Learning"
+    assert:
+      - type: contains
+        value: "Nikhil"
+        description: "Must use candidate's first name"
+
+  - description: "Cover letter — Under 400 words (reasonable limit)"
+    prompt: cover_letter_prompt
+    vars:
+      candidate_name: "Nikhil Reddy Kasam"
+      job_title: "Data Scientist"
+      company: "Stripe"
+      job_description: "Python, statistics, A/B testing, SQL"
+      resume_context: "Python, SQL, Machine Learning, XGBoost, Apache Spark"
+    assert:
+      - type: javascript
+        value: "output.split(' ').length < 400"
+        description: "Cover letter under 400 words"
+
+  - description: "Cover letter — Mentions company name"
+    prompt: cover_letter_prompt
+    vars:
+      candidate_name: "Nikhil Reddy Kasam"
+      job_title: "ML Platform Engineer"
+      company: "Databricks"
+      job_description: "MLflow, Spark, distributed ML, Python"
+      resume_context: "MLflow, Apache Spark, Python, Machine Learning, AWS"
+    assert:
+      - type: contains
+        value: "Databricks"
+        description: "Cover letter must reference the target company"
+
+outputPath: evals/promptfoo_results.json

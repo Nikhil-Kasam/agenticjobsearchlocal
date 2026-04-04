@@ -1,0 +1,152 @@
+version: "3.9"
+
+# ============================================================
+# AI Job Application Automator — Docker Compose Stack
+#
+# Services:
+#   redis     — Celery broker + WebSocket pub/sub
+#   postgres  — Job state DB + LangGraph checkpoints
+#   fastapi   — Web dashboard (port 8080)
+#   celery-*  — Three worker queues (search, evaluate, apply)
+#   flower    — Celery monitoring UI (port 5555)
+#
+# Note: vLLM (27B model) runs SEPARATELY via run_vllm.sh
+#       (needs nightly Docker image + direct GPU flags)
+# ============================================================
+
+services:
+
+  # ── Redis ────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: jobagent_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # ── PostgreSQL ───────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: jobagent_postgres
+    environment:
+      POSTGRES_USER: jobagent
+      POSTGRES_PASSWORD: jobagent
+      POSTGRES_DB: jobagent
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jobagent -d jobagent"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # ── FastAPI Web Dashboard ────────────────────────────────
+  fastapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jobagent_web
+    command: uvicorn web_app:app --host 0.0.0.0 --port 8080 --reload
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+      - ./chroma_db:/app/chroma_db
+    env_file: .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Celery Worker: Search Queue ──────────────────────────
+  celery-search:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jobagent_search_worker
+    command: celery -A celery_app worker -Q search -c 1 -n search@%h --loglevel=info
+    volumes:
+      - .:/app
+      - ./chroma_db:/app/chroma_db
+    env_file: .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Celery Worker: Evaluate Queue ────────────────────────
+  celery-evaluate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A celery_app worker -Q evaluate -c 3 -n evaluate@%h --loglevel=info
+    volumes:
+      - .:/app
+      - ./chroma_db:/app/chroma_db
+    env_file: .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    deploy:
+      replicas: 1  # 3 concurrent threads via -c 3
+    restart: unless-stopped
+
+  # ── Celery Worker: Apply Queue (has Playwright) ──────────
+  celery-apply:
+    build:
+      context: .
+      dockerfile: Dockerfile.apply  # separate image with Playwright browsers
+    container_name: jobagent_apply_worker
+    command: celery -A celery_app worker -Q apply -c 1 -n apply@%h --loglevel=info
+    volumes:
+      - .:/app
+      - ./chroma_db:/app/chroma_db
+    env_file: .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Flower: Celery Monitoring UI ─────────────────────────
+  flower:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jobagent_flower
+    command: celery -A celery_app flower --port=5555 --broker=${REDIS_URL}
+    ports:
+      - "5555:5555"
+    env_file: .env
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  redis_data:
