@@ -86,7 +86,7 @@
 
 ### Step 1 — Start the Local LLM (Ollama)
 
-We shifted from a resource-heavy vLLM deployment to an extremely stable **Ollama** setup utilizing highly optimized `.gguf` quantizations.
+Current deployment works with and extremely stable **Ollama** setup utilizing highly optimized `.gguf` quantizations(working with vllm too).
 
 1. **Install Ollama**
    ```bash
@@ -277,8 +277,8 @@ agenticjobsearchlocal/
 | `REDIS_URL` | `redis://redis:6379/0` | Celery broker URL |
 | `POSTGRES_URL` | `postgresql+asyncpg://jobagent:jobagent@postgres:5432/jobagent` | Async DB URL |
 | `POSTGRES_URL_SYNC` | `postgresql://jobagent:jobagent@postgres:5432/jobagent` | Sync DB URL (LangGraph) |
-| `VLLM_URL` | `http://host.docker.internal:11434/v1` | Ollama compatible OpenAI Endpoint |
-| `VLLM_MODEL` | `qwen3-coder:30b` | Ollama model handle |
+| `OLLAMA` | `http://host.docker.internal:11434/v1` | Ollama compatible OpenAI Endpoint |
+| `LLM` | `qwen3-coder:30b` | Ollama model handle |
 | `EMBEDDING_MODEL` | `nomic-embed-text:latest` | Dedicated 768d embedding model |
 | `MATCH_THRESHOLD` | `60` | Minimum score (0–100) to trigger cover letter + apply |
 
