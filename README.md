@@ -1,4 +1,4 @@
-# 🤖 AI Job Application Automator
+# 🤖 Multi-Agent Job Search Orchestrator
 
 <div align="center">
 
@@ -10,7 +10,6 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
 [![LangGraph](https://img.shields.io/badge/LangGraph-Checkpointed-1C3C3C?logo=langchain)](https://langchain-ai.github.io/langgraph/)
 [![Celery](https://img.shields.io/badge/Celery-Redis-37814A?logo=celery)](https://docs.celeryq.dev/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 </div>
 
@@ -338,7 +337,3 @@ agenticjobsearchlocal/
 Pull requests are welcome. For major changes, please open an issue first to discuss what you'd like to change.
 
 ---
-
-## 📄 License
-
-[MIT](LICENSE) — feel free to use, modify, and distribute.
